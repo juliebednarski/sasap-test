@@ -5,5 +5,5 @@ This is a test repository for teaching GitHub.
 - apples
 - bananas
 - oranges
-+ clementine
-+ tangerines
++ +clementine
++ +tangerines
