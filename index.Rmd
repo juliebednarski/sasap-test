@@ -3,28 +3,53 @@ title: "index.Rmd"
 author: "julie bednarski"
 date: "November 29, 2017"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+#escapement <- read.csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/knb.92020.1", stringsAsFactors = FALSE)
+
+#write.csv(escapement, "escapement.csv")
+escapement <- read.csv("escapement.csv", stringsAsFactors = FALSE)
+
 ```
 
-## R Markdown
+```{r}
+library(tidyr)
+library(dplyr)
+library(leaflet)
+library(ggplot2)
+library(DT)
+```
+```{r}
+median_esc <- escapement %>%
+  separate(sampleDate, c("Year", "Month", "Day"), sep = "-") %>%
+  group_by(Species, Location, Year) %>%
+  summarise(escapement = sum(DailyCount, na.rm = TRUE)) %>%
+  group_by(Species) %>%
+  summarise(median_escapement = median(escapement))
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+median_esc
+    
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+ggplot(median_esc, aes(Species, median_escapement)) + 
+  geom_col() +
+  coord_flip()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+datatable(median_esc)
+```
+
+```{r}
+locations <- escapement %>%
+  distinct(Location, Latitude, Longitude) %>%
+  drop_na()
+
+leaflet(locations) %>%
+  addTiles() %>%
+  addMarkers(~ -abs(Longitude), ~ Latitude, popup = ~ Location)
+```
